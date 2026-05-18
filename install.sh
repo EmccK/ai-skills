@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 交互式安装脚本：从 GitHub 仓库或本地克隆安装 skills
-# 用法:
-#   远程: curl -fsSL https://raw.githubusercontent.com/{OWNER}/{REPO}/main/install.sh | bash
-#   本地: ./install.sh
+# AI Skills 交互式安装器
+#
+# 一行命令安装:
+#   bash <(curl -fsSL https://raw.githubusercontent.com/EmccK/ai-skills/main/install.sh)
+#
+# 本地运行:
+#   ./install.sh
 
-REPO_URL="${SKILL_REPO_URL:-}"
-REPO_DIR=""
-CLEANUP=""
+GITHUB_REPO="EmccK/ai-skills"
+INSTALL_DIR="${AI_SKILLS_DIR:-$HOME/.ai-skills}"
 
 # 颜色
 RED='\033[0;31m'
@@ -18,36 +20,38 @@ YELLOW='\033[1;33m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-info()  { echo -e "${CYAN}$*${NC}"; }
+info()    { echo -e "${CYAN}$*${NC}"; }
 success() { echo -e "${GREEN}$*${NC}"; }
-warn()  { echo -e "${YELLOW}$*${NC}"; }
-error() { echo -e "${RED}$*${NC}" >&2; }
+warn()    { echo -e "${YELLOW}$*${NC}"; }
+error()   { echo -e "${RED}$*${NC}" >&2; }
 
-# 检测是否在仓库内运行
-detect_repo_dir() {
-  local script_dir
-  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# 确定仓库目录：本地已有则用本地，否则克隆到 ~/.ai-skills
+ensure_repo() {
+  local script_dir=""
 
-  if [ -f "$script_dir/CLAUDE.md" ] && [ -d "$script_dir/skills" ]; then
+  # 如果是本地执行（非 pipe），检查脚本所在目录
+  if [ -n "${BASH_SOURCE[0]:-}" ] && [ "${BASH_SOURCE[0]}" != "bash" ]; then
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" || true
+  fi
+
+  if [ -n "$script_dir" ] && [ -f "$script_dir/CLAUDE.md" ] && [ -d "$script_dir/skills" ]; then
     REPO_DIR="$script_dir"
-  elif [ -n "$REPO_URL" ]; then
-    REPO_DIR="$(mktemp -d)"
-    CLEANUP="$REPO_DIR"
-    info "正在克隆仓库..."
-    git clone --depth 1 "$REPO_URL" "$REPO_DIR" 2>/dev/null
-  else
-    error "无法确定 skills 仓库位置"
-    error "请设置 SKILL_REPO_URL 环境变量或在仓库目录内运行"
-    exit 1
+    info "使用本地仓库: $REPO_DIR"
+    return
   fi
-}
 
-cleanup() {
-  if [ -n "$CLEANUP" ] && [ -d "$CLEANUP" ]; then
-    rm -rf "$CLEANUP"
+  # 远程执行：克隆或更新到固定目录
+  if [ -d "$INSTALL_DIR/.git" ]; then
+    info "更新已有仓库: $INSTALL_DIR"
+    git -C "$INSTALL_DIR" pull --ff-only --quiet 2>/dev/null || true
+  else
+    info "克隆仓库到: $INSTALL_DIR"
+    rm -rf "$INSTALL_DIR"
+    git clone --depth 1 "https://github.com/$GITHUB_REPO.git" "$INSTALL_DIR" 2>/dev/null
   fi
+
+  REPO_DIR="$INSTALL_DIR"
 }
-trap cleanup EXIT
 
 # 发现所有可用 skills
 discover_skills() {
@@ -55,11 +59,11 @@ discover_skills() {
     -not -path '*/deprecated/*' \
     -not -path '*/node_modules/*' \
     -print0 | while IFS= read -r -d '' f; do
-    local dir name desc category
+    local dir name category desc
     dir="$(dirname "$f")"
     name="$(basename "$dir")"
     category="$(basename "$(dirname "$dir")")"
-    desc="$(grep -m1 '^description:' "$f" | sed 's/^description: *//')"
+    desc="$(grep -m1 '^description:' "$f" | sed 's/^description: *//' | cut -c1-60)"
     echo "$category/$name|$desc"
   done | sort
 }
@@ -72,7 +76,7 @@ select_target() {
   echo "  2) Codex        (~/.codex/skills)"
   echo "  3) 全部"
   echo ""
-  read -rp "请选择 [1-3，默认 3]: " choice
+  read -rp "请选择 [1-3，默认 3]: " choice </dev/tty
   choice="${choice:-3}"
 
   case "$choice" in
@@ -112,14 +116,14 @@ select_skills() {
     local id desc
     id="${skill%%|*}"
     desc="${skill#*|}"
-    printf "  ${BOLD}%2d)${NC} %-30s %s\n" "$i" "$id" "$desc"
+    printf "  ${BOLD}%2d)${NC} %-28s %s\n" "$i" "$id" "$desc"
     i=$((i + 1))
   done
 
   echo ""
-  echo "  ${BOLD} a)${NC} 全部安装"
+  echo -e "  ${BOLD} a)${NC} 全部安装"
   echo ""
-  read -rp "请选择要安装的 skills（逗号分隔序号，或 a 全选）[默认 a]: " selection
+  read -rp "请选择要安装的 skills（逗号分隔序号，或 a 全选）[默认 a]: " selection </dev/tty
   selection="${selection:-a}"
 
   SELECTED_SKILLS=()
@@ -186,13 +190,14 @@ main() {
   echo -e "${BOLD}AI Skills 安装器${NC}"
   echo "─────────────────────────"
 
-  detect_repo_dir
+  ensure_repo
   select_target
   select_skills
   install_skills
 
   echo ""
-  info "提示：skills 通过软链接安装，更新仓库即可同步更新。"
+  info "Skills 通过软链接指向 $REPO_DIR"
+  info "更新：cd $REPO_DIR && git pull"
   echo ""
 }
 

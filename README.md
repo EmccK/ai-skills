@@ -4,31 +4,29 @@
 
 ## 安装
 
-### 方式一：交互式安装（推荐）
+### 一行命令安装（推荐）
 
 ```bash
-# 克隆后运行安装脚本，交互式选择 skills 和目标工具
-git clone https://github.com/EmccK/ai-skills.git ~/Code/ai-skills
-cd ~/Code/ai-skills
-./install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/EmccK/ai-skills/main/install.sh)
 ```
 
-### 方式二：gh skill install
+交互式选择要安装的 skills 和目标工具（Claude Code / Codex / 全部）。仓库会克隆到 `~/.ai-skills`，skills 通过软链接安装，`git pull` 即可更新。
+
+### gh skill install
 
 ```bash
 gh skill install EmccK/ai-skills rustify-fullstack --agent claude-code --scope user
 ```
 
-### 方式三：批量链接
+### 本地批量链接
 
 ```bash
-# 链接所有 skills 到 Claude Code
+git clone https://github.com/EmccK/ai-skills.git ~/Code/ai-skills
+cd ~/Code/ai-skills
+
+# 链接到指定工具
 ./scripts/link-skills.sh claude
-
-# 链接到 Codex
 ./scripts/link-skills.sh codex
-
-# 全部
 ./scripts/link-skills.sh all
 ```
 
