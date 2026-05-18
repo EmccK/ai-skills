@@ -1,0 +1,6 @@
+{
+  "name": "kai-skills",
+  "skills": [
+    "./skills/scaffold/rustify-fullstack"
+  ]
+}
