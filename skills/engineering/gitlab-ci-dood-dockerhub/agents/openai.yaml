@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitLab CI DooD Docker Hub"
+  short_description: "Generate GitLab CI for DooD Docker Hub"
+  default_prompt: "Use $gitlab-ci-dood-dockerhub to create a .gitlab-ci.yml for this project."

@@ -40,7 +40,9 @@ cd ~/Code/ai-skills
 
 ### Engineering — 工程实践
 
-（待补充）
+| 技能 | 说明 |
+|------|------|
+| [gitlab-ci-dood-dockerhub](skills/engineering/gitlab-ci-dood-dockerhub/SKILL.md) | 生成/审查 GitLab CI（DooD + Docker Hub + 缓存） |
 
 ### Productivity — 工作流
 

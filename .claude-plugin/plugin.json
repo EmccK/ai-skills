@@ -1,6 +1,7 @@
 {
   "name": "kai-skills",
   "skills": [
-    "./skills/scaffold/rustify-fullstack"
+    "./skills/scaffold/rustify-fullstack",
+    "./skills/engineering/gitlab-ci-dood-dockerhub"
   ]
 }
