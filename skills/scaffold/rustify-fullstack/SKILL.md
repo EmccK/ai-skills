@@ -24,7 +24,10 @@ description: 创建或迁移项目为 Rustify 全栈架构（Rust axum 后端 + 
 - 项目名称（snake_case）
 - 默认端口号（建议 43xxx 高位端口）
 - Docker Hub 用户名（默认 `wangkai9799`）
-- 是否需要数据库
+- 数据库支持（三选一）：
+  - 不需要数据库
+  - 单选一种数据库（SQLite / PostgreSQL / MySQL）
+  - 多数据库切换（选择支持哪些 + 默认用哪个）
 - 是否需要 GitLab CI
 
 ### 2. 生成后端
@@ -49,7 +52,7 @@ description: 创建或迁移项目为 Rustify 全栈架构（Rust axum 后端 + 
 └── README.md
 ```
 
-参考 [cargo-toml.md](cargo-toml.md)、[build-rs.md](build-rs.md)、[main-rs.md](main-rs.md)、[api-router.md](api-router.md) 中的模板。
+参考 [cargo-toml.md](cargo-toml.md)、[build-rs.md](build-rs.md)、[main-rs.md](main-rs.md)、[api-router.md](api-router.md) 中的模板。如需数据库，参考 [database.md](database.md)。
 
 ### 3. 生成前端
 

@@ -16,8 +16,8 @@ serde = { version = "1", features = ["derive"] }
 按需添加：
 
 ```toml
-# 数据库
-rusqlite = { version = "0.35", features = ["bundled"] }
+# 数据库（详见 database.md）
+# sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # HTTP 客户端
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
