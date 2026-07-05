@@ -21,6 +21,13 @@ description: Use when creating, reviewing, or fixing `.gitlab-ci.yml` for projec
 - 默认 Docker Hub 用户名：`wangkai9799`
 - 生成 CI 时可在 `variables:` 中设置 `DOCKER_HUB_USER: "wangkai9799"`；`DOCKER_HUB_PAT` 仍必须通过 GitLab CI/CD masked variable 注入，禁止写入文件。
 
+## 自建 CI 镜像
+
+- 复杂 test job 可使用个人 CI 基础镜像，避免每个项目重复安装稳定依赖。
+- Rust + Node + native build deps 项目可用 `wangkai9799/rustify-ci:rust1-bookworm-node22`；它包含 Rust、rustfmt、Node.js/npm、cmake、perl、clang、pkg-config、libclang-dev。
+- 简单 Docker 构建/推送 job 仍用 `docker:29-cli`，不要为了统一而切到业务 CI 镜像。
+- 个人 CI 镜像来源仓库：`~/Code/Personal/DockerImages`；优先使用语义明确的版本 tag，`latest` 只作默认便捷入口。
+
 ## 硬约束
 
 为这类项目生成或修改 `.gitlab-ci.yml` 时，以下规则是硬约束：
@@ -35,7 +42,8 @@ description: Use when creating, reviewing, or fixing `.gitlab-ci.yml` for projec
 
 1. 先查看项目文件，确认技术栈和构建入口：如 `Dockerfile`、`Cargo.toml`、`build.gradle*`、`package.json`、`pom.xml`。
 2. 生成尽量短的 `.gitlab-ci.yml`，只包含项目真正需要的阶段和缓存。
-3. 需要构建/推送镜像时，优先使用 `image: docker:29-cli`。如果使用 `docker buildx build --cache-to type=local`，必须显式创建 `docker-container` builder；默认 `docker` driver 不支持导出 local cache。`before_script` 示例：
+3. 需要 test job 时，按项目依赖选择最小可用镜像；Rust + Node + native build deps 可优先用 `wangkai9799/rustify-ci:rust1-bookworm-node22`。
+4. 需要构建/推送镜像时，优先使用 `image: docker:29-cli`。如果使用 `docker buildx build --cache-to type=local`，必须显式创建 `docker-container` builder；默认 `docker` driver 不支持导出 local cache。`before_script` 示例：
 
    ```yaml
    - docker info
@@ -45,7 +53,7 @@ description: Use when creating, reviewing, or fixing `.gitlab-ci.yml` for projec
    - echo "$DOCKER_HUB_PAT" | docker login -u "$DOCKER_HUB_USER" --password-stdin
    ```
 
-4. 镜像名使用 Docker Hub：
+5. 镜像名使用 Docker Hub：
 
    ```yaml
    variables:
@@ -54,7 +62,7 @@ description: Use when creating, reviewing, or fixing `.gitlab-ci.yml` for projec
      IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
    ```
 
-5. 写完后运行校验脚本：
+6. 写完后运行校验脚本：
 
    ```bash
    python3 ~/.codex/skills/gitlab-ci-dood-dockerhub/scripts/lint_gitlab_ci.py .gitlab-ci.yml --runner-config ~/.gitlab-runner/config.toml
